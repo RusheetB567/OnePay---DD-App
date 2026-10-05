@@ -1,0 +1,5 @@
+{
+  "name": "onepay", "version": "0.1.0", "private": true, "type": "module",
+  "scripts": { "dev": "node server.js", "start": "node server.js", "test": "node --test --test-isolation=none", "check": "node --check src/app.js && node --check src/finance.js && node --check server.js" },
+  "engines": { "node": ">=22" }
+}
