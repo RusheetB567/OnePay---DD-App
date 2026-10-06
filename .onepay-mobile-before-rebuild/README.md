@@ -31,7 +31,7 @@ npm --prefix apps/mobile run lint
 npm run build
 ```
 
-23 tests cover financial calculations, hostile authenticated API requests, PostgreSQL migrations and ownership constraints, pagination, privacy and release configuration. Embedded PostgreSQL tests do not replace testing a managed PostgreSQL deployment.
+19 tests cover financial calculations, hostile authenticated API requests, PostgreSQL migrations and ownership constraints, pagination, privacy and release configuration. Embedded PostgreSQL tests do not replace testing a managed PostgreSQL deployment.
 
 ## Structure
 
@@ -44,5 +44,3 @@ npm run build
 [Implementation report](docs/IMPLEMENTATION-REPORT.md), [architecture](docs/ARCHITECTURE.md), [API reference](docs/API.md), [security verification and release blockers](docs/SECURITY-VERIFICATION.md).
 
 Leave changes uncommitted for review. No GitHub remote is configured in this checkout; link the existing repository before pushing.
-
-Latest mobile changes: guided onboarding, subscription/income screens, month-grid calendar, timezone preferences, transaction amount/category filters, visual amount hiding and session-race protection. See [mobile delivery report](docs/MOBILE-DELIVERY-REPORT.md).

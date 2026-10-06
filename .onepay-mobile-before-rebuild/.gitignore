@@ -11,3 +11,4 @@ dist/
 artifacts/
 *.pem
 *.key
+.onepay-previous-*/

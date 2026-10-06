@@ -5,9 +5,4 @@ node_modules/
 coverage/
 *.log
 .DS_Store
-dist/
-.expo/
-*.tsbuildinfo
-artifacts/
-*.pem
-*.key
+.onepay-previous-*/
