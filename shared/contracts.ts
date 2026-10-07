@@ -68,6 +68,9 @@ export interface Profile {
   notificationPrivacy: "private" | "detailed" | "hidden";
   timeZone: string;
   onboardingCompleted: boolean;
+  hideAmounts?: boolean;
+  calendarView?: "Week" | "Fortnight" | "Month";
+  reducedHome?: boolean;
 }
 export interface Workspace {
   profile: Profile;

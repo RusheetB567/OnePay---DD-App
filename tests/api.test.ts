@@ -343,3 +343,85 @@ test("rate limiting, payload bounds and production identity fail closed", async 
   assert.equal((await post("{}")).status, 503);
   assert.equal((await post("{}")).status, 429);
 });
+test("visual preferences persist per owner and reject invalid or stale updates", async (t) => {
+  const server = createApp({
+    store: new MemoryStore(),
+    banking: new SyntheticBankingProvider(),
+    mode: "development",
+    origins: ["http://localhost:8081"],
+    authLimit: 100,
+  }).listen(0, "127.0.0.1");
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/v1`;
+  const call = (
+    path: string,
+    access?: string,
+    body?: unknown,
+    revision?: number,
+  ) =>
+    fetch(base + path, {
+      method: body ? "PATCH" : "GET",
+      headers: {
+        ...(access ? { Authorization: `Bearer ${access}` } : {}),
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(revision !== undefined ? { "If-Match": String(revision) } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  const register = async (email: string) =>
+    (await (
+      await fetch(base + "/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          name: "Review",
+          password: "fictional-review-password-2026",
+          device: "Preference test",
+        }),
+      })
+    ).json()) as Tokens;
+  const a = await register("design-a@example.test"),
+    b = await register("design-b@example.test");
+  const original = (await (
+    await call("/bootstrap", a.accessToken)
+  ).json()) as Bootstrap;
+  const profile = {
+    ...original.profile,
+    hideAmounts: true,
+    calendarView: "Fortnight",
+    reducedHome: true,
+    theme: "dark",
+  };
+  assert.equal(
+    (await call("/profile", a.accessToken, profile, original.revision)).status,
+    204,
+  );
+  const updated = (await (
+    await call("/bootstrap", a.accessToken)
+  ).json()) as Bootstrap;
+  assert.equal(updated.profile.hideAmounts, true);
+  assert.equal(updated.profile.calendarView, "Fortnight");
+  assert.equal(updated.profile.theme, "dark");
+  const other = (await (
+    await call("/bootstrap", b.accessToken)
+  ).json()) as Bootstrap;
+  assert.equal(other.profile.hideAmounts, false);
+  assert.equal(other.profile.calendarView, "Month");
+  assert.equal(
+    (await call("/profile", a.accessToken, profile, original.revision)).status,
+    409,
+  );
+  assert.equal(
+    (
+      await call(
+        "/profile",
+        a.accessToken,
+        { ...profile, calendarView: "Invalid" },
+        updated.revision,
+      )
+    ).status,
+    400,
+  );
+});

@@ -1,6 +1,8 @@
 import { router, type Href } from "expo-router";
 import {
   Button,
+  OnePayLoader,
+  Skeleton,
   Card,
   DataGate,
   Label,
@@ -30,7 +32,12 @@ export default function Notifications() {
     >
       <Button title="Back" secondary onPress={() => router.back()} />
       <DataGate>
-        {remote.loading && <Message text="Checking for updates…" />}
+        {remote.loading && (
+          <>
+            <OnePayLoader text="Checking for updates…" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {remote.error && (
           <>
             <Message text={remote.error} error />

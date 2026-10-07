@@ -70,6 +70,9 @@ export const profileSchema = z.strictObject({
     ])
     .default("Australia/Adelaide"),
   onboardingCompleted: z.boolean().default(false),
+  hideAmounts: z.boolean().default(false),
+  calendarView: z.enum(["Week", "Fortnight", "Month"]).default("Month"),
+  reducedHome: z.boolean().default(false),
 });
 export const connectSchema = z.strictObject({
   institution: z.string().max(80),

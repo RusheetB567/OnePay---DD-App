@@ -1,3 +1,4 @@
+import { ForecastChart, AllocationRing } from "../design-system/financial";
 import { router } from "expo-router";
 import { useState } from "react";
 import type { Forecast } from "../../../../shared/contracts";
@@ -5,6 +6,8 @@ import { useRemote } from "../api/use-remote";
 import {
   Amount,
   Button,
+  OnePayLoader,
+  Skeleton,
   Card,
   Choice,
   DataGate,
@@ -43,7 +46,12 @@ export default function ForecastScreen() {
             <Button title="Try again" onPress={remote.retry} />
           </>
         )}
-        {!forecast && !issue && <Message text="Calculating your forecast…" />}
+        {!forecast && !issue && (
+          <>
+            <OnePayLoader text="Calculating your forecast…" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {forecast && (
           <>
             <Card>
@@ -59,6 +67,25 @@ export default function ForecastScreen() {
               <Message
                 text={`Calculated ${forecast.calculationDate} · ${forecast.calculationVersion}`}
               />
+            </Card>
+            <Card>
+              <AllocationRing forecast={forecast} />
+            </Card>
+            <Card>
+              <Heading>Balance trajectory</Heading>
+              <ForecastChart forecast={forecast} />
+            </Card>
+            <Card>
+              <Heading>Your money flow</Heading>
+              <Label>Available at the start</Label>
+              <Amount cents={forecast.opening} />
+              <Message text="↓ Expected income" />
+              <Amount cents={forecast.income} />
+              <Message text="↓ Upcoming commitments" />
+              <Amount cents={forecast.committed} />
+              <Label>Projected remaining</Label>
+              <Amount cents={forecast.closing} />
+              <Message text="Excludes future everyday spending and transfers. These are estimates based on your current plan." />
             </Card>
             <Heading>Account pressure</Heading>
             {forecast.accounts.map((a) => (

@@ -1,13 +1,23 @@
 import { router } from "expo-router";
 import { View } from "react-native";
 import type { Commitment, FinancialEvent } from "../../../../shared/contracts";
-import { Card, Label, Message, useMoney, styles } from "../design-system/ui";
+import {
+  Card,
+  EmptyState,
+  Icon,
+  usePalette,
+  Label,
+  Message,
+  useMoney,
+  styles,
+} from "../design-system/ui";
 export function CommitmentList({
   items,
 }: {
   items: (Commitment | FinancialEvent)[];
 }) {
   const formatMoney = useMoney();
+  const c = usePalette();
   return (
     <>
       {items.length ? (
@@ -19,6 +29,10 @@ export function CommitmentList({
             }
           >
             <View style={styles.row}>
+              <Icon
+                name={item.kind === "income" ? "income" : "payments"}
+                color={item.kind === "income" ? c.income : c.primary}
+              />
               <View style={{ flex: 1 }}>
                 <Label>{item.merchant}</Label>
                 <Message
@@ -36,7 +50,7 @@ export function CommitmentList({
           </Card>
         ))
       ) : (
-        <Message text="No commitments here yet. Add one or review detected patterns." />
+        <EmptyState />
       )}
     </>
   );

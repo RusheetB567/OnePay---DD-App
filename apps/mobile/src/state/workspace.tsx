@@ -1,3 +1,4 @@
+import { clearRemoteCache } from "../api/use-remote";
 import React, {
   createContext,
   useCallback,
@@ -36,6 +37,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [loading, setLoading] = useState(true),
     [error, setError] = useState<string | null>(null);
   const [hideAmounts, setHideAmounts] = useState(false);
+  const savedPrivacy = useRef<boolean | undefined>(undefined);
   const generation = useRef(0);
   const inFlight = useRef(false);
   const authenticated = useRef(false);
@@ -46,6 +48,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     try {
       const next = await request<Bootstrap>("/bootstrap");
       if (current === generation.current) {
+        if (
+          !authenticated.current ||
+          savedPrivacy.current !== (next.profile.hideAmounts ?? false)
+        )
+          setHideAmounts(next.profile.hideAmounts ?? false);
+        savedPrivacy.current = next.profile.hideAmounts ?? false;
         setData(next);
         setSignedIn(true);
         authenticated.current = true;
@@ -104,12 +112,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     const subscription = AppState.addEventListener("change", (value) => {
       if (value !== "active") {
         generation.current++;
+        clearRemoteCache();
         setData(null);
       } else if (authenticated.current) void reload();
     });
     return () => subscription.remove();
   }, [reload]);
   const login = async (email: string, password: string, name?: string) => {
+    clearRemoteCache();
     setError(null);
     const tokens = await publicRequest<Tokens>(
       name ? "/auth/register" : "/auth/login",
@@ -168,7 +178,19 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         logout,
         mutate,
         hideAmounts,
-        toggleAmounts: () => setHideAmounts((v) => !v),
+        toggleAmounts: () => {
+          const next = !hideAmounts;
+          setHideAmounts(next);
+          if (data)
+            void mutate("/profile", "PATCH", {
+              ...data.profile,
+              hideAmounts: next,
+            }).catch(() =>
+              setError(
+                "Privacy is applied here, but could not be saved. Try again after refreshing.",
+              ),
+            );
+        },
       }}
     >
       {children}

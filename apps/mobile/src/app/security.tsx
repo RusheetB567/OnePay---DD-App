@@ -5,6 +5,10 @@ import { request } from "../api/client";
 import { useRemote } from "../api/use-remote";
 import {
   Button,
+  OnePayLoader,
+  Skeleton,
+  Icon,
+  usePalette,
   Card,
   DataGate,
   Heading,
@@ -14,6 +18,7 @@ import {
 } from "../design-system/ui";
 import { useWorkspace } from "../state/workspace";
 export default function Security() {
+  const c = usePalette();
   const { data, logout } = useWorkspace();
   const [issue, setIssue] = useState(""),
     [busy, setBusy] = useState(false);
@@ -69,7 +74,9 @@ export default function Security() {
       <Button title="Back" secondary onPress={() => router.back()} />
       <DataGate>
         <Card>
-          <Heading>Sign-in protection</Heading>
+          <Icon name="shield" color={c.warning} size={36} />
+          <Heading>Development protection</Heading>
+          <Message text="Provider setup required. Passkeys, MFA and biometric protection are not enabled." />
           <Message text="Development passwords use Argon2id. Access tokens expire after five minutes. Refresh tokens rotate and reuse revokes the affected session. Sessions have a 30-minute idle limit and 24-hour absolute lifetime." />
           <Button
             title="Passkeys, MFA & recovery — provider setup pending"
@@ -80,7 +87,12 @@ export default function Security() {
         </Card>
         {issue && <Message text={issue} error />}
         <Heading>Active sessions</Heading>
-        {sessionsRemote.loading && <Message text="Loading sessions…" />}
+        {sessionsRemote.loading && (
+          <>
+            <OnePayLoader text="Loading sessions…" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {sessionsRemote.error && <Message text={sessionsRemote.error} error />}
         {sessions.map((s) => (
           <Card key={s.id}>
@@ -110,13 +122,19 @@ export default function Security() {
           disabled={busy}
         />
         <Button
+          destructive
           title="Sign out everywhere"
           secondary
           onPress={() => void signOut(true)}
           disabled={busy}
         />
         <Heading>Recent security activity</Heading>
-        {auditRemote.loading && <Message text="Loading security activity…" />}
+        {auditRemote.loading && (
+          <>
+            <OnePayLoader text="Loading security activity…" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {auditRemote.error && <Message text={auditRemote.error} error />}
         {audit.map((a) => (
           <Card key={a.id}>

@@ -1,10 +1,17 @@
+import { useReducedMotion } from "../design-system/motion";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { WorkspaceProvider, useWorkspace } from "../state/workspace";
 function Navigation() {
+  const reduced = useReducedMotion();
   const { signedIn } = useWorkspace();
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: reduced ? "none" : "slide_from_right",
+      }}
+    >
       <Stack.Screen name="index" />
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />

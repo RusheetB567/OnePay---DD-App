@@ -11,6 +11,11 @@ import {
 import { useRemote } from "../../api/use-remote";
 import {
   Button,
+  BottomSheet,
+  Amount,
+  Label,
+  OnePayLoader,
+  Skeleton,
   Choice,
   DataGate,
   Field,
@@ -24,7 +29,9 @@ import { useWorkspace } from "../../state/workspace";
 export default function Calendar() {
   const { data } = useWorkspace();
   const c = usePalette();
-  const [mode, setMode] = useState<CalendarMode>("Month"),
+  const [mode, setMode] = useState<CalendarMode>(
+      data?.profile.calendarView || "Month",
+    ),
     [entered, setDate] = useState(""),
     [selected, setSelected] = useState(""),
     [query, setQuery] = useState(""),
@@ -47,6 +54,7 @@ export default function Calendar() {
     data?.updatedAt,
   );
   const events = remote.value?.events || [];
+  const point = data?.forecast.points.find((p) => p.date === selected);
   const visible = events.filter(
     (e) =>
       (!selected || mode !== "Month" || e.date === selected) &&
@@ -62,7 +70,7 @@ export default function Calendar() {
   };
   return (
     <Screen
-      title="The calendar for your money"
+      title="Money calendar"
       subtitle={`Expected events · ${data?.profile.timeZone || "your timezone"}`}
     >
       <DataGate>
@@ -129,11 +137,20 @@ export default function Calendar() {
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
               {monthCells(date).map((day, i) => {
                 const due = events.filter((e) => e.date === day).length;
+                const income = events.some(
+                  (e) => e.date === day && e.kind === "income",
+                );
+                const debit = events.some(
+                  (e) => e.date === day && e.kind === "expense",
+                );
+                const pressure = data?.forecast.points.find(
+                  (p) => p.date === day && p.beforeIncome < 0,
+                );
                 return day ? (
                   <Pressable
                     key={day}
                     accessibilityRole="button"
-                    accessibilityLabel={`${day}, ${due} expected events`}
+                    accessibilityLabel={`${day}, ${due} expected events${income ? ", income" : ""}${debit ? ", expenses" : ""}${pressure ? ", projected shortfall" : ""}`}
                     accessibilityState={{ selected: day === selected }}
                     onPress={() => setSelected(day)}
                     style={{
@@ -159,7 +176,7 @@ export default function Calendar() {
                         fontSize: 10,
                       }}
                     >
-                      {due ? `${due} due` : " "}
+                      {pressure ? "Tight" : due ? `${due} due` : " "}
                     </Text>
                   </Pressable>
                 ) : (
@@ -186,7 +203,12 @@ export default function Calendar() {
           value={filter}
           onChange={setFilter}
         />
-        {remote.loading && <Message text="Loading calendar…" />}
+        {remote.loading && (
+          <>
+            <OnePayLoader text="Preparing your money calendar" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {(issue || remote.error) && (
           <Message text={issue || remote.error || ""} error />
         )}
@@ -194,7 +216,25 @@ export default function Calendar() {
         <Heading>
           {selected && mode === "Month" ? selected : "Your agenda"}
         </Heading>
-        <CommitmentList items={visible} />
+        {!remote.loading && !remote.error && !issue && (
+          <CommitmentList items={visible} />
+        )}
+        <BottomSheet
+          visible={!!selected && mode === "Month"}
+          title={selected}
+          onClose={() => setSelected("")}
+        >
+          {point && (
+            <>
+              <Label>Opening projected balance</Label>
+              <Amount cents={point.beforeIncome + point.expense} />
+              <Label>Closing projected balance</Label>
+              <Amount cents={point.balance} />
+              <Message text="Daily totals are projected, not bank settlement." />
+            </>
+          )}
+          <CommitmentList items={events.filter((e) => e.date === selected)} />
+        </BottomSheet>
         <Button
           title="Add a commitment"
           onPress={() => router.push("/commitment")}

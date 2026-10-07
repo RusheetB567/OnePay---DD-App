@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { router } from "expo-router";
 import type { Commitment } from "../../../../shared/contracts";
 import { useRemote } from "../api/use-remote";
 import {
   Button,
+  OnePayLoader,
+  Skeleton,
   Card,
   DataGate,
   Heading,
@@ -10,6 +13,8 @@ import {
   Message,
   Screen,
   Amount,
+  Choice,
+  EmptyState,
 } from "../design-system/ui";
 import { CommitmentList } from "../components/commitments";
 import { useWorkspace } from "../state/workspace";
@@ -21,6 +26,7 @@ type Summary = {
 };
 export default function Subscriptions() {
   const { data } = useWorkspace();
+  const [period, setPeriod] = useState("Annual");
   const remote = useRemote<Summary>(
     data ? "/subscriptions" : null,
     data?.updatedAt,
@@ -36,7 +42,12 @@ export default function Subscriptions() {
     >
       <Button title="Back" secondary onPress={() => router.back()} />
       <DataGate>
-        {remote.loading && <Message text="Loading subscription costs…" />}
+        {remote.loading && (
+          <>
+            <OnePayLoader text="Loading subscription costs…" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {remote.error && (
           <>
             <Message text={remote.error} error />
@@ -46,13 +57,30 @@ export default function Subscriptions() {
         {remote.value && (
           <>
             <Card>
-              <Label>Estimated monthly equivalent</Label>
-              <Amount cents={remote.value.monthly} large />
-              <Label>Annualised cost</Label>
-              <Amount cents={remote.value.annual} />
+              <Choice
+                values={["Monthly", "Annual"]}
+                value={period}
+                onChange={setPeriod}
+              />
+              <Label>
+                {period === "Annual"
+                  ? "Annualised subscription cost"
+                  : "Estimated monthly equivalent"}
+              </Label>
+              <Amount
+                cents={
+                  period === "Annual"
+                    ? remote.value.annual
+                    : remote.value.monthly
+                }
+                large
+              />
             </Card>
             {!remote.value.items.length && (
-              <Message text="No active tracked subscriptions. Review a detected pattern or add one manually." />
+              <EmptyState
+                title="Room for what matters"
+                description="No active subscriptions are tracked. Review a detected service or add one manually to see its annual impact."
+              />
             )}
             {remote.value.items.map((item) => (
               <Card

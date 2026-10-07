@@ -3,6 +3,9 @@ import type { Commitment, Pattern } from "../../../../shared/contracts";
 import { useRemote } from "../api/use-remote";
 import {
   Button,
+  OnePayLoader,
+  Skeleton,
+  EmptyState,
   Card,
   DataGate,
   Heading,
@@ -33,7 +36,12 @@ export default function Income() {
     >
       <Button title="Back" secondary onPress={() => router.back()} />
       <DataGate>
-        {remote.loading && <Message text="Loading income history…" />}
+        {remote.loading && (
+          <>
+            <OnePayLoader text="Loading income history…" />
+            <Skeleton kind="row" />
+          </>
+        )}
         {remote.error && (
           <>
             <Message text={remote.error} error />
@@ -46,7 +54,10 @@ export default function Income() {
             <CommitmentList items={remote.value.items} />
             <Heading>Observed patterns</Heading>
             {!remote.value.patterns.length && (
-              <Message text="No income patterns detected. Add a commitment for an irregular or new source of income." />
+              <EmptyState
+                title="Make payday part of your plan"
+                description="Add your next income manually or connect sample history to find consistent paydays."
+              />
             )}
             {remote.value.patterns.map((p) => (
               <Card key={p.key}>

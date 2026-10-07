@@ -11,3 +11,8 @@ dist/
 artifacts/
 *.pem
 *.key
+.onepay-*/
+
+# Local browser-review evidence
+docs/preview-running.png
+docs/ultrawork-home.png

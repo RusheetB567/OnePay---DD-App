@@ -7,7 +7,7 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "tsx backend/main.ts",
+    "dev": "node scripts/preview.mjs",
     "dev:demo": "node server.js",
     "dev:mobile": "npm --prefix apps/mobile start",
     "dev:web": "npm --prefix apps/mobile run web",
@@ -16,7 +16,9 @@
     "test": "node --import tsx --test --test-isolation=none tests/*.test.js tests/*.test.ts",
     "check": "tsc --noEmit && node --check src/app.js && node --check src/finance.js && node --check server.js",
     "check:mobile": "npm --prefix apps/mobile run typecheck",
-    "build": "tsc"
+    "build": "tsc",
+    "preview": "node scripts/preview.mjs",
+    "dev:api": "tsx backend/main.ts"
   },
   "engines": {
     "node": ">=22"

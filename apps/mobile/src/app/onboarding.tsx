@@ -2,6 +2,8 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   Button,
+  Icon,
+  usePalette,
   Card,
   DataGate,
   Heading,
@@ -10,6 +12,7 @@ import {
 } from "../design-system/ui";
 import { useWorkspace } from "../state/workspace";
 export default function Onboarding() {
+  const c = usePalette();
   const { data, mutate } = useWorkspace();
   const [busy, setBusy] = useState(false),
     [issue, setIssue] = useState("");
@@ -35,7 +38,8 @@ export default function Onboarding() {
     >
       <DataGate>
         <Card>
-          <Heading>1. Set your preferences</Heading>
+          <Icon name="shield" color={c.primary} size={30} />
+          <Heading>1. Make it yours</Heading>
           <Message text="Choose your timezone, safety buffer and reminder privacy. Your buffer stays reserved in the forecast." />
           <Button
             title="Set preferences"
@@ -44,6 +48,7 @@ export default function Onboarding() {
           />
         </Card>
         <Card>
+          <Icon name="accounts" color={c.aqua} size={30} />
           <Heading>2. Bring your accounts together</Heading>
           <Message text="The current development connection supplies fictional accounts only. Review the data permissions before connecting." />
           <Button
@@ -61,7 +66,8 @@ export default function Onboarding() {
           />
         </Card>
         <Card>
-          <Heading>3. Review the evidence</Heading>
+          <Icon name="calendar" color={c.income} size={30} />
+          <Heading>3. Build your money calendar</Heading>
           <Message text="Confirm income and commitments before relying on a forecast. Pattern confidence describes observed history, not a guarantee." />
           <Button
             title="Review recurring patterns"

@@ -1,86 +1,141 @@
 import { router } from "expo-router";
+import { Pressable, Text, View } from "react-native";
 import { useWorkspace } from "../../state/workspace";
 import {
   Amount,
+  Icon,
   BalanceHero,
   Button,
   Card,
   DataGate,
   Heading,
-  Label,
   Message,
   Screen,
-  useMoney,
+  usePalette,
 } from "../../design-system/ui";
-import { CommitmentList } from "../../components/commitments";
+import {
+  AllocationRing,
+  ForecastChart,
+  MoneyTimeline,
+  PressureStory,
+} from "../../design-system/financial";
 export default function Home() {
-  const formatMoney = useMoney();
-  const { data, reload, hideAmounts, toggleAmounts } = useWorkspace();
-  const f = data?.forecast;
-  const next = f?.events.find((e) => e.kind === "income");
-  const upcoming =
-    f?.events
-      .filter((e) => e.kind === "expense" && (!next || e.date <= next.date))
-      .slice(0, 5) || [];
+  const { data, hideAmounts, toggleAmounts } = useWorkspace(),
+    c = usePalette(),
+    f = data?.forecast,
+    next = f?.events.find((e) => e.kind === "income");
   return (
     <Screen
-      title={data ? `Hello, ${data.profile.name}.` : "Your workspace"}
-      subtitle="Know what’s coming. Plan with a little more confidence."
+      title={
+        data ? `Hello, ${data.profile.name.split(" ")[0]}.` : "Your money today"
+      }
+      subtitle="A clear view of today. A little confidence for tomorrow."
     >
       <DataGate>
         {data && f && (
           <>
-            <Button
-              title={
-                hideAmounts
-                  ? "Show financial amounts"
-                  : "Hide financial amounts"
-              }
-              secondary
-              onPress={toggleAmounts}
-            />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                marginBottom: 16,
+              }}
+            >
+              <View>
+                <Text style={{ color: c.muted, fontSize: 13 }}>
+                  Available for bills & spending
+                </Text>
+                <Amount cents={f.opening} />
+              </View>
+              <View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    hideAmounts ? "Reveal amounts" : "Hide amounts"
+                  }
+                  accessibilityState={{ selected: hideAmounts }}
+                  onPress={toggleAmounts}
+                  style={{
+                    minWidth: 44,
+                    minHeight: 44,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: 14,
+                    backgroundColor: c.tint,
+                  }}
+                >
+                  <Icon name="eye" color={c.primary} />
+                </Pressable>
+              </View>
+            </View>
             <BalanceHero
               cents={f.safeToSpend}
               buffer={f.buffer}
               onPress={() => router.push("/forecast")}
             />
-            <Card onPress={() => router.push("/(tabs)/accounts")}>
-              <Label>Available for bills & spending</Label>
-              <Amount cents={f.opening} />
-              <Message text="Connected eligible accounts. Savings remain set aside." />
+            <Card onPress={() => router.push("/forecast")}>
+              <AllocationRing forecast={f} />
             </Card>
-            <Card onPress={() => router.push("/(tabs)/payments")}>
-              <Label>Next expected income</Label>
-              <Amount cents={next?.amount || 0} />
-              <Message
-                text={
-                  next
-                    ? `${next.merchant} · ${next.date} · ${next.certainty} · ${next.confidence}% pattern confidence`
-                    : "Confirm an income pattern or add your payday manually."
-                }
+            <PressureStory forecast={f} />
+            {!data.accounts.length && (
+              <Button
+                title="Connect a sample bank"
+                onPress={() => router.push("/connect")}
               />
-            </Card>
-            {f.accounts
-              .filter((a) => a.shortfall > 0)
-              .map((a) => (
-                <Card key={a.id} onPress={() => router.push("/forecast")}>
-                  <Heading>Account funding warning</Heading>
-                  <Message
-                    text={`${a.name} may be short by ${formatMoney(a.shortfall)} before expected income. Combined balances do not fund another account automatically.`}
-                    error
-                  />
+            )}
+            <View style={{ marginTop: 24 }}>
+              <Heading>Coming up</Heading>
+              <Message text="Your money timeline · expected events" />
+              <MoneyTimeline events={f.events} />
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+              <View style={{ flex: 1, minWidth: 200 }}>
+                <Card onPress={() => router.push("/income")}>
+                  <Text style={{ color: c.muted, fontSize: 13 }}>
+                    Next expected income
+                  </Text>
+                  {next ? (
+                    <>
+                      <Amount cents={next.amount} />
+                      <Message
+                        text={`${next.merchant} · ${next.date} · ${next.certainty}`}
+                      />
+                    </>
+                  ) : (
+                    <Message text="Add your payday or confirm an income pattern." />
+                  )}
                 </Card>
-              ))}
-            <Heading>Before your next payday</Heading>
-            <CommitmentList items={upcoming} />
+              </View>
+              <View style={{ flex: 1, minWidth: 200 }}>
+                <Card onPress={() => router.push("/(tabs)/accounts")}>
+                  <Text style={{ color: c.muted, fontSize: 13 }}>
+                    Your connected accounts
+                  </Text>
+                  <Text
+                    style={{
+                      color: c.text,
+                      fontSize: 28,
+                      fontWeight: "700",
+                      marginTop: 12,
+                    }}
+                  >
+                    {data.accounts.length}
+                  </Text>
+                  <Message text="Savings stay set aside from safe-to-spend." />
+                </Card>
+              </View>
+            </View>
+            {!data.profile.reducedHome && (
+              <Card>
+                <Heading>The next 30 days</Heading>
+                <ForecastChart forecast={f} />
+              </Card>
+            )}
             <Button
               title="Add a commitment"
               onPress={() => router.push("/commitment")}
-            />
-            <Button
-              title="Forecast · 7, 14 and 30 days"
-              secondary
-              onPress={() => router.push("/forecast")}
             />
             <Button
               title="Notifications"
@@ -88,17 +143,12 @@ export default function Home() {
               onPress={() => router.push("/notifications")}
             />
             <Button
-              title="Security, privacy & preferences"
+              title="Security & preferences"
               secondary
               onPress={() => router.push("/settings")}
             />
-            <Button
-              title="Refresh workspace"
-              secondary
-              onPress={() => void reload()}
-            />
             <Message
-              text={`${data.mode} environment · Banking: ${data.capabilities.banking} · Last refreshed ${new Date(data.updatedAt).toLocaleString()}`}
+              text={`Updated ${new Date(data.updatedAt).toLocaleTimeString()} · ${data.capabilities.banking === "synthetic" ? "Fictional development data" : "Connected accounts"}`}
             />
           </>
         )}

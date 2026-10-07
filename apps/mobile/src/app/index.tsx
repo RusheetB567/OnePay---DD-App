@@ -1,8 +1,11 @@
 import { Redirect } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 import {
   Button,
+  OnePayLoader,
+  OnePayMark,
+  usePalette,
   Card,
   Field,
   Heading,
@@ -12,6 +15,7 @@ import {
 } from "../design-system/ui";
 import { useWorkspace } from "../state/workspace";
 export default function Welcome() {
+  const c = usePalette();
   const { signedIn, loading, login, error, data } = useWorkspace();
   const [register, setRegister] = useState(false),
     [email, setEmail] = useState(""),
@@ -30,7 +34,7 @@ export default function Welcome() {
   if (loading)
     return (
       <Screen title="Your money, in view">
-        <ActivityIndicator />
+        <OnePayLoader text="Checking your secure session" />
       </Screen>
     );
   const submit = async () => {
@@ -50,6 +54,19 @@ export default function Welcome() {
       title="A clearer view of what’s next."
       subtitle="Your financial life, organised around time."
     >
+      <View
+        style={{
+          padding: 24,
+          borderRadius: 28,
+          backgroundColor: c.tint,
+          marginBottom: 24,
+        }}
+      >
+        <OnePayMark color={c.primary} size={64} />
+        <View style={{ height: 20 }} />
+        <Heading>Know what your money does next.</Heading>
+        <Message text="Your accounts, commitments and next payday. One clear view." />
+      </View>
       <Card>
         <Heading>{register ? "Create your workspace" : "Welcome back"}</Heading>
         <Message text="Development sign-in · fictional data only. Production identity, email verification, passkeys and recovery await provider setup." />

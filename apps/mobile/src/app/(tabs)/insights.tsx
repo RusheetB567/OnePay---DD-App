@@ -1,6 +1,8 @@
+import { PressureStory } from "../../design-system/financial";
 import { useState } from "react";
 import {
   Button,
+  EmptyState,
   Card,
   DataGate,
   Heading,
@@ -32,9 +34,13 @@ export default function Insights() {
       subtitle="Review the evidence before adding anything to your plan."
     >
       <DataGate>
+        {data && <PressureStory forecast={data.forecast} />}
         {issue && <Message text={issue} error />}
         {!data?.patterns.length && (
-          <Message text="No unreviewed patterns. Detection needs at least three posted transactions with a consistent cadence." />
+          <EmptyState
+            title="All caught up"
+            description="New income and recurring-payment patterns appear here as history builds. Patterns need at least three consistent posted transactions."
+          />
         )}
         {data?.patterns.map((p) => (
           <Card key={p.key}>

@@ -14,6 +14,13 @@ import {
 import { useWorkspace } from "../state/workspace";
 function Preferences({ profile }: { profile: Profile }) {
   const { mutate } = useWorkspace();
+  const [hideAmounts, setPrivacyAmounts] = useState(
+      profile.hideAmounts ? "On" : "Off",
+    ),
+    [calendarView, setCalendarView] = useState(profile.calendarView || "Month"),
+    [reducedHome, setReducedHome] = useState(
+      profile.reducedHome ? "On" : "Off",
+    );
   const [name, setName] = useState(profile.name),
     [buffer, setBuffer] = useState(String(profile.buffer / 100)),
     [timeZone, setTimeZone] = useState(profile.timeZone),
@@ -27,6 +34,10 @@ function Preferences({ profile }: { profile: Profile }) {
     setIssue("");
     try {
       await mutate("/profile", "PATCH", {
+        ...profile,
+        hideAmounts: hideAmounts === "On",
+        calendarView,
+        reducedHome: reducedHome === "On",
         name,
         buffer: decimalToCents(buffer),
         theme,
@@ -75,6 +86,24 @@ function Preferences({ profile }: { profile: Profile }) {
         values={["light", "dark", "system"] as const}
         value={theme}
         onChange={setTheme}
+      />
+      <Label>Hide financial amounts by default</Label>
+      <Choice
+        values={["On", "Off"]}
+        value={hideAmounts}
+        onChange={setPrivacyAmounts}
+      />
+      <Label>Calendar default view</Label>
+      <Choice
+        values={["Week", "Fortnight", "Month"] as const}
+        value={calendarView}
+        onChange={setCalendarView}
+      />
+      <Label>Reduced detail on Home</Label>
+      <Choice
+        values={["On", "Off"]}
+        value={reducedHome}
+        onChange={setReducedHome}
       />
       <Label>In-app reminders</Label>
       <Choice
